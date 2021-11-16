@@ -1,107 +1,94 @@
 <template>
-  <h2>Play with keys: aqzsedrftgyhujikolpm</h2>
-  <p v-show="currentFrequence">{{ currentFrequence }} Hz</p>
-  <!--
+  <h2>Play with your keyboard: azertyuiopqsdfghjklmwxcvbn</h2>
+
+  <p>Pitch oscillateur A</p>
   <input
-    @input="handleFrequence"
+    @input="handlePitch"
     type="range"
     id="frequence"
     name="frequence"
-    min="50"
-    max="200"
+    min="55"
+    max="220"
   />
-  -->
+
+  <select v-model="oscillatorWaveForm">
+    <option value="sine">Sine</option>
+    <option value="square">Square</option>
+    <option value="triangle">Triangle</option>
+  </select>
+
+  <p v-show="currentFrequence">{{ currentFrequence }} Hz</p>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from "vue";
+import { defineComponent, ref, watch } from "vue";
+
+function generateNotes(startNote = 55) {
+  // https://lecompositeur.com/wp-content/uploads/2016/04/Frequences.pdf
+  // Fréquence = 440 Hz * r puissance n
+  // où n est le nombre de demi-tons
+  // fréquence do 4 = 440 * r puissance 3
+  // résultat: 523.251 Hz
+  const notes = new Map();
+  const r = 1.05946;
+  const keys = "azertyuiopqsdfghjklmwxcvbn";
+  for (let i = 0; i < keys.length; i++) {
+    const frequence = startNote * Math.pow(r, i + 1);
+    notes.set(keys[i], frequence);
+  }
+  return notes;
+}
 
 export default defineComponent({
   setup() {
-    const oscillatorMuted = ref(true);
     const currentFrequence = ref(null as null | number);
+    const notes = ref(generateNotes());
+    // eslint-disable-next-line
+    const oscillatorWaveForm = ref("sine" as OscillatorType);
+
     const audioContext = new AudioContext();
     const oscillatorAudioNode = audioContext.createOscillator();
     const gainAudioNode = audioContext.createGain();
-
     gainAudioNode.connect(audioContext.destination);
 
     let oscillatorStarted = false;
 
-    const notes = new Map();
-    // do
-    notes.set("a", 311.126);
-    notes.set("q", 329.627);
-    // ré
-    notes.set("z", 349.228);
-    notes.set("s", 369.994);
-    notes.set("e", 391.995);
-    notes.set("d", 415.304);
-    // la
-    notes.set("r", 440);
-    notes.set("f", 466.163);
-    notes.set("t", 493.883);
-    notes.set("g", 523.251);
-    notes.set("y", 554.365);
-    notes.set("h", 587.329);
-    notes.set("u", 622.253);
-    notes.set("j", 659.255);
-    notes.set("i", 698.456);
-    notes.set("k", 739.988);
-    notes.set("o", 783.991);
-    notes.set("l", 830.609);
-    notes.set("p", 880.0);
-    notes.set("m", 932.327);
-
     oscillatorAudioNode.frequency.value = 100;
-    oscillatorAudioNode.type = "square";
+    oscillatorAudioNode.type = oscillatorWaveForm.value;
+
+    watch(oscillatorWaveForm, (v) => {
+      oscillatorAudioNode.type = v;
+    });
 
     document.addEventListener("keydown", (e) => {
+      // Note: un oscillateur ne peut être démarré qu'une seule fois.
+      // Et on ne peut pas le démarrer sans interaction utilisateur car Chrome interdit cela
+      // On joue juste la connexion / déconnexion à la sortie audio pour le faire démarrer / arrêter
       if (oscillatorStarted === false) {
         oscillatorStarted = true;
         oscillatorAudioNode.start();
       }
-      if (notes.get(e.key)) {
+      if (notes.value.get(e.key)) {
         oscillatorAudioNode.connect(gainAudioNode);
-        currentFrequence.value = notes.get(e.key);
-        oscillatorAudioNode.frequency.value = notes.get(e.key);
+        currentFrequence.value = notes.value.get(e.key);
+        oscillatorAudioNode.frequency.value = notes.value.get(e.key);
       }
     });
 
     document.addEventListener("keyup", (e) => {
-      if (notes.get(e.key)) {
+      if (notes.value.get(e.key)) {
         oscillatorAudioNode.disconnect(gainAudioNode);
-        console.log("e", e.key);
       }
     });
 
-    // un oscillateur ne peut être démarrer qu'une seule fois.
-    // Et on ne peut pas le démarrer sans interaction utilisateur car Chrome interdit cela
-    // On joue juste la connexion / déconnexion à la sortie audio pour le faire démarrer / arrêter
-    function startOscillator() {
-      if (oscillatorStarted === false) {
-        oscillatorStarted = true;
-        oscillatorAudioNode.start();
-      }
-      oscillatorMuted.value = false;
-      oscillatorAudioNode.connect(gainAudioNode);
-    }
-    function stopOscillator() {
-      oscillatorMuted.value = true;
-      oscillatorAudioNode.disconnect(gainAudioNode);
-    }
-
-    function handleFrequence(event: any) {
-      oscillatorAudioNode.frequency.value = event.target.value;
-      console.log(event.target.value);
+    function handlePitch(event: any) {
+      notes.value = generateNotes(event.target.value);
     }
 
     return {
       currentFrequence,
-      startOscillator,
-      stopOscillator,
-      oscillatorMuted,
-      handleFrequence,
+      handlePitch,
+      oscillatorWaveForm,
     };
   },
 });
