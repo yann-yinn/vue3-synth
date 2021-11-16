@@ -58,16 +58,23 @@ export function useOscillator(audioContext: AudioContext): useOscillatorReturn {
   watch(
     () => state.frequency,
     (value: undefined | number) => {
-      // Note: un oscillateur ne peut être démarré qu'une seule fois.
-      // Et on ne peut pas le démarrer sans interaction utilisateur car Chrome interdit cela
-      // On joue juste la connexion / déconnexion à la sortie audio pour le faire démarrer / arrêter
+      // Note: un oscillateur ne peut être démarré qu'une seule fois,
+      // on ne peut donc pas utiliser start() et stop() puis à nouveau start()
+      // pour déclencher / couper / redéclencher le son de l'oscillo.
+      // On ne peut également pas le démarrer sans interaction utilisateur
+      // car Chrome l'interdit ( pour qu'un son ne soit pas lancé automatiquement et
+      // imposé à l'internaute sans qu'il sache d'où il provient)
+      //
+      // On démarre donc l'oscillateur ici, lorsque l'utilisateur appuie sur une
+      // touche de son clavier; puis on joue juste la connexion / déconnexion
+      // à la sortie audio pour le faire démarrer / arrêter le son de l'oscillo.
       if (oscillatorStarted === false) {
-        oscillatorStarted = true;
         oscillatorNode.start();
+        oscillatorStarted = true;
       }
       if (value) {
-        oscillatorNode.connect(gainNode);
         oscillatorNode.frequency.value = value;
+        oscillatorNode.connect(gainNode);
       } else {
         oscillatorNode.disconnect(gainNode);
       }
