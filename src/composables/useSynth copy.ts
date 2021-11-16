@@ -1,16 +1,20 @@
-import { reactive, watch, computed } from "vue";
+import { reactive, watch, ref, Ref } from "vue";
 
-interface UseOscillatorState {
+interface State {
   waveForm: OscillatorType;
   gain: number;
-  pitch: undefined | number;
-  frequency: undefined | number;
+  pitch: number;
+  currentFrequence: undefined | number;
 }
 
 interface useOscillatorReturn {
   oscillatorNode: OscillatorNode;
   gainNode: GainNode;
-  state: UseOscillatorState;
+  state: State;
+}
+
+interface useKeyboardAsPianoReturn {
+  frequence: Ref<undefined | number>;
 }
 
 /**
@@ -20,17 +24,19 @@ interface useOscillatorReturn {
  */
 export function useOscillator(audioContext: AudioContext): useOscillatorReturn {
   let oscillatorStarted = false;
-  const state = reactive<UseOscillatorState>({
+  const state = reactive<State>({
     waveForm: "sine",
     gain: 1,
     pitch: 55,
-    frequency: undefined,
+    currentFrequence: undefined,
   });
 
   // Connect oscillator to gain, connect gain to audio output.
   const oscillatorNode = audioContext.createOscillator();
   const gainNode = audioContext.createGain();
   gainNode.connect(audioContext.destination);
+
+  const notes = ref(_keyboardMap(state.pitch));
 
   oscillatorNode.type = state.waveForm;
 
@@ -42,22 +48,26 @@ export function useOscillator(audioContext: AudioContext): useOscillatorReturn {
   );
 
   watch(
-    () => state.gain,
+    () => state.pitch,
     (value: number) => {
-      if (value < 0 || value > 1) {
-        gainNode.gain.value = 0;
-        throw new Error(
-          "useOscillator: Le gain doit être compris entre 0 et 1"
-        );
-      }
-      console.log(value);
-      gainNode.gain.value = value;
+      notes.value = _keyboardMap(value);
     }
   );
 
   watch(
-    () => state.frequency,
-    (value: undefined | number) => {
+    () => state.gain,
+    (value: number) => {
+      if (value < 0 || value > 1) {
+        throw new Error(
+          "useOscillator: Le gain doit être compris entre 0 et 1"
+        );
+      }
+      gainNode.gain.value = value;
+    }
+  );
+
+  document.addEventListener("keydown", (e) => {
+    if (notes.value.get(e.key)) {
       // Note: un oscillateur ne peut être démarré qu'une seule fois.
       // Et on ne peut pas le démarrer sans interaction utilisateur car Chrome interdit cela
       // On joue juste la connexion / déconnexion à la sortie audio pour le faire démarrer / arrêter
@@ -65,14 +75,19 @@ export function useOscillator(audioContext: AudioContext): useOscillatorReturn {
         oscillatorStarted = true;
         oscillatorNode.start();
       }
-      if (value) {
-        oscillatorNode.connect(gainNode);
-        oscillatorNode.frequency.value = value;
-      } else {
-        oscillatorNode.disconnect(gainNode);
+      oscillatorNode.connect(gainNode);
+      state.currentFrequence = notes.value.get(e.key);
+      if (state.currentFrequence) {
+        oscillatorNode.frequency.value = state.currentFrequence;
       }
     }
-  );
+  });
+
+  document.addEventListener("keyup", (e) => {
+    if (notes.value.get(e.key)) {
+      oscillatorNode.disconnect(gainNode);
+    }
+  });
 
   return {
     oscillatorNode,
@@ -81,56 +96,30 @@ export function useOscillator(audioContext: AudioContext): useOscillatorReturn {
   };
 }
 
-interface UseKeyboardAsPianoState {
-  frequency: undefined | number;
-  keyPressed: undefined | string;
-  startFromFrequency: number;
-}
+export function useKeyboardAsPiano(): useKeyboardAsPianoReturn {
+  const frequence = ref<undefined | number>(undefined);
 
-interface useKeyboardAsPianoOptions {
-  onFrequencyChange: (frequence: undefined | number) => void;
-}
-
-interface useKeyboardAsPianoReturn {
-  state: UseKeyboardAsPianoState;
-}
-
-export function useKeyboardAsPiano(
-  options: useKeyboardAsPianoOptions
-): useKeyboardAsPianoReturn {
-  const state: UseKeyboardAsPianoState = reactive({
-    frequency: undefined,
-    startFromFrequency: 55,
-    keyPressed: undefined,
-  });
-
-  const frequencies = computed(() => {
-    return _keyboardMap(state.startFromFrequency);
-  });
+  const notes = _keyboardMap();
 
   document.addEventListener("keydown", (e) => {
-    if (frequencies.value.get(e.key)) {
-      state.keyPressed = e.key;
-      state.frequency = frequencies.value.get(e.key);
-      options.onFrequencyChange(frequencies.value.get(e.key));
+    if (notes.get(e.key)) {
+      frequence.value = notes.get(e.key);
     }
   });
 
   document.addEventListener("keyup", (e) => {
-    if (frequencies.value.get(e.key)) {
-      state.frequency = undefined;
-      options.onFrequencyChange(undefined);
-      state.keyPressed = undefined;
+    if (notes.get(e.key)) {
+      frequence.value = undefined;
     }
   });
 
-  return { state };
+  return { frequence };
 }
 
 // fonction d'aide pour savoir quelle fréquence l'oscillateur
 // doit avoir en fonction d'une touche du clavier.
 // @param startNode: Fréquence en Hs de la note de départ qui permet de calculer toutes les autres
-function _keyboardMap(startFrequencey = 55): Map<string, number> {
+function _keyboardMap(startNote = 55): Map<string, number> {
   // https://lecompositeur.com/wp-content/uploads/2016/04/Frequences.pdf
   // Fréquence = 440 Hz * r puissance n
   // où n est le nombre de demi-tons
@@ -140,8 +129,8 @@ function _keyboardMap(startFrequencey = 55): Map<string, number> {
   const r = 1.05946;
   const keys = "azertyuiopqsdfghjklmwxcvbn";
   for (let i = 0; i < keys.length; i++) {
-    const frequency = startFrequencey * Math.pow(r, i + 1);
-    notes.set(keys[i], frequency);
+    const frequence = startNote * Math.pow(r, i + 1);
+    notes.set(keys[i], frequence);
   }
   return notes;
 }
