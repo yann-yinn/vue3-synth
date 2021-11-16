@@ -1,3 +1,4 @@
+/* global defineProps, defineEmits */
 module.exports = {
   root: true,
   env: {
