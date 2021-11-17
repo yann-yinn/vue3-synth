@@ -23,7 +23,8 @@
 
 <script lang="ts">
 import { defineComponent, watch, PropType } from "vue";
-import { useKeyboardAsPiano, useOscillator } from "@/composables/useSynth";
+import useSynthKeyboard from "@/composables/useSynthKeyboard";
+import useSynthOscillator from "@/composables/useSynthOscillator";
 
 export default defineComponent({
   props: {
@@ -34,12 +35,12 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const oscillator = useOscillator();
+    const oscillator = useSynthOscillator();
 
     // par défaut, utiliser la valeur passé en prop.
     // eslint-disable-next-line
     oscillator.state.waveForm = props.defaultWaveForm;
-    const keyboard = useKeyboardAsPiano();
+    const keyboard = useSynthKeyboard();
 
     // mettre à jour la forme d'onde de l'oscillateur
     // si la prop de forme d'onde change.

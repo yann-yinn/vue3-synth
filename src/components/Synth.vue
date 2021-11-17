@@ -33,7 +33,8 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import { useSynthAudio, useKeyboardAsPiano } from "@/composables/useSynth";
+import useSynthKeyboard from "@/composables/useSynthKeyboard";
+import useSynthAudio from "@/composables/useSynthAudio";
 import Oscillator from "@/components/Oscillator.vue";
 
 export default defineComponent({
@@ -41,7 +42,7 @@ export default defineComponent({
     Oscillator,
   },
   setup() {
-    const keyboardAsPiano = useKeyboardAsPiano();
+    const keyboardAsPiano = useSynthKeyboard();
     const synthAudio = useSynthAudio();
 
     // mettre à jour le pitch du piano, c'est à dire à partir
