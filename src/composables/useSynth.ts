@@ -14,11 +14,14 @@ interface useOscillatorReturn {
 }
 
 /**
+ * useOscillator
+ *
  * An oscillator has:
  * - a reactive gain (from 0 to 1)
  * - a reactive waveform
  */
-export function useOscillator(audioContext: AudioContext): useOscillatorReturn {
+export function useOscillator(): useOscillatorReturn {
+  const { audioContext, globalGainNode } = useSynthAudio();
   let oscillatorStarted = false;
   const state = reactive<UseOscillatorState>({
     waveForm: "sine",
@@ -30,7 +33,7 @@ export function useOscillator(audioContext: AudioContext): useOscillatorReturn {
   // Connect oscillator to gain, connect gain to audio output.
   const oscillatorNode = audioContext.createOscillator();
   const gainNode = audioContext.createGain();
-  gainNode.connect(audioContext.destination);
+  gainNode.connect(globalGainNode);
 
   oscillatorNode.type = state.waveForm;
 
@@ -94,42 +97,47 @@ interface UseKeyboardAsPianoState {
   startFromFrequency: number;
 }
 
-interface useKeyboardAsPianoOptions {
-  onFrequencyChange: (frequence: undefined | number) => void;
-}
-
 interface useKeyboardAsPianoReturn {
   state: UseKeyboardAsPianoState;
 }
 
-export function useKeyboardAsPiano(
-  options: useKeyboardAsPianoOptions
-): useKeyboardAsPianoReturn {
-  const state: UseKeyboardAsPianoState = reactive({
-    frequency: undefined,
-    startFromFrequency: 55,
-    keyPressed: undefined,
-  });
+/**
+ * useKeyboardAsPiano()
+ */
 
+let useKeyboardAsPianoKeydownListenerAttached = false;
+let useKeyboardAsPianoKeyupListenerAttached = false;
+
+const state: UseKeyboardAsPianoState = reactive({
+  frequency: undefined,
+  startFromFrequency: 55,
+  keyPressed: undefined,
+});
+
+export function useKeyboardAsPiano(): useKeyboardAsPianoReturn {
   const frequencies = computed(() => {
     return _keyboardMap(state.startFromFrequency);
   });
 
-  document.addEventListener("keydown", (e) => {
-    if (frequencies.value.get(e.key)) {
-      state.keyPressed = e.key;
-      state.frequency = frequencies.value.get(e.key);
-      options.onFrequencyChange(frequencies.value.get(e.key));
-    }
-  });
+  if (useKeyboardAsPianoKeydownListenerAttached === false) {
+    document.addEventListener("keydown", (e) => {
+      useKeyboardAsPianoKeydownListenerAttached = true;
+      if (frequencies.value.get(e.key)) {
+        state.keyPressed = e.key;
+        state.frequency = frequencies.value.get(e.key);
+      }
+    });
+  }
 
-  document.addEventListener("keyup", (e) => {
-    if (frequencies.value.get(e.key)) {
-      state.frequency = undefined;
-      options.onFrequencyChange(undefined);
-      state.keyPressed = undefined;
-    }
-  });
+  if (useKeyboardAsPianoKeyupListenerAttached === false) {
+    document.addEventListener("keyup", (e) => {
+      useKeyboardAsPianoKeyupListenerAttached = true;
+      if (frequencies.value.get(e.key)) {
+        state.frequency = undefined;
+        state.keyPressed = undefined;
+      }
+    });
+  }
 
   return { state };
 }
@@ -151,4 +159,45 @@ function _keyboardMap(startFrequencey = 55): Map<string, number> {
     notes.set(keys[i], frequency);
   }
   return notes;
+}
+
+/**
+ * useSynthAudio
+ */
+let audioContext: AudioContext;
+let globalGainNode: GainNode;
+
+interface useSynthAudioState {
+  gain: number;
+}
+
+const useSynthAudioState = reactive({
+  gain: 1,
+});
+
+export function useSynthAudio(): {
+  audioContext: AudioContext;
+  globalGainNode: GainNode;
+  state: useSynthAudioState;
+} {
+  if (!audioContext) {
+    audioContext = new AudioContext();
+    globalGainNode = audioContext.createGain();
+    globalGainNode.connect(audioContext.destination);
+  }
+
+  watch(
+    () => useSynthAudioState.gain,
+    (value: number) => {
+      if (value < 0 || value > 1) {
+        globalGainNode.gain.value = 0;
+        throw new Error(
+          "useOscillator: Le gain doit être compris entre 0 et 1"
+        );
+      }
+      globalGainNode.gain.value = value;
+    }
+  );
+
+  return { audioContext, globalGainNode, state: useSynthAudioState };
 }
