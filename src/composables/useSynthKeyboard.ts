@@ -1,5 +1,6 @@
 import { reactive, computed } from "vue";
 import { UseKeyboardAsPianoState, UseKeyboardAsPianoReturn } from "@/types";
+import { keyboardMap } from "@/lib/synth";
 
 const state: UseKeyboardAsPianoState = reactive({
   frequency: undefined,
@@ -8,7 +9,7 @@ const state: UseKeyboardAsPianoState = reactive({
 });
 
 const frequencies = computed(() => {
-  return _keyboardMap(state.startFromFrequency);
+  return keyboardMap(state.startFromFrequency);
 });
 
 document.addEventListener("keydown", (e) => {
@@ -27,23 +28,4 @@ document.addEventListener("keyup", (e) => {
 
 export default function useSynthKeyboard(): UseKeyboardAsPianoReturn {
   return { state };
-}
-
-// fonction d'aide pour savoir quelle fréquence l'oscillateur
-// doit avoir en fonction d'une touche du clavier.
-// @param startNode: Fréquence en Hs de la note de départ qui permet de calculer toutes les autres
-function _keyboardMap(startFrequencey = 55): Map<string, number> {
-  // https://lecompositeur.com/wp-content/uploads/2016/04/Frequences.pdf
-  // Fréquence = 440 Hz * r puissance n
-  // où n est le nombre de demi-tons
-  // fréquence do 4 = 440 * r puissance 3
-  // résultat: 523.251 Hz
-  const notes = new Map();
-  const r = 1.05946;
-  const keys = "azertyuiopqsdfghjklmwxcvbn";
-  for (let i = 0; i < keys.length; i++) {
-    const frequency = startFrequencey * Math.pow(r, i + 1);
-    notes.set(keys[i], frequency);
-  }
-  return notes;
 }

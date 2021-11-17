@@ -11,11 +11,13 @@ export default function useOscillator(): UseOscillatorReturn {
   const state = reactive<UseOscillatorState>({
     waveForm: "sine",
     gain: 1,
-    pitch: 55,
+    pitch: 0,
     frequency: undefined,
   });
 
-  // Connect oscillator to gain, connect gain to audio output.
+  // connecter l'oscillateur à son gain, puis connecter
+  // le gain de l'oscillateur au gain global du synthé, qui
+  // est lui même connecté à la sortie audio de l'ordinateur.
   const oscillatorNode = audioContext.createOscillator();
   const gainNode = audioContext.createGain();
   gainNode.connect(globalGainNode);
@@ -38,7 +40,6 @@ export default function useOscillator(): UseOscillatorReturn {
           "useOscillator: Le gain doit être compris entre 0 et 1"
         );
       }
-      console.log(value);
       gainNode.gain.value = value;
     }
   );
@@ -49,13 +50,14 @@ export default function useOscillator(): UseOscillatorReturn {
       // Note: un oscillateur ne peut être démarré qu'une seule fois,
       // on ne peut donc pas utiliser start() et stop() puis à nouveau start()
       // pour déclencher / couper / redéclencher le son de l'oscillo.
+      //
       // On ne peut également pas le démarrer sans interaction utilisateur
-      // car Chrome l'interdit ( pour qu'un son ne soit pas lancé automatiquement et
+      // car Chrome l'interdit (afin qu'un son ne soit pas lancé automatiquement et
       // imposé à l'internaute sans qu'il sache d'où il provient)
       //
-      // On démarre donc l'oscillateur ici, lorsque l'utilisateur appuie sur une
-      // touche de son clavier; puis on joue juste la connexion / déconnexion
-      // à la sortie audio pour le faire démarrer / arrêter le son de l'oscillo.
+      // On démarre donc l'oscillateur ici, (lorsque l'utilisateur appuie sur une
+      // touche de son clavier); puis on joue juste la connexion / déconnexion
+      // à la sortie audio pour rendre audible / inaudible le son de l'oscillo.
       if (oscillatorStarted === false) {
         oscillatorNode.start();
         oscillatorStarted = true;

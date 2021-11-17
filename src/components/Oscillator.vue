@@ -10,6 +10,11 @@
   </div>
 
   <div>
+    <p>Pitch {{ oscillator.state.pitch }}</p>
+    <input type="range" min="-24" max="24" v-model="oscillator.state.pitch" />
+  </div>
+
+  <div>
     <p>Volume ({{ (oscillator.state.gain * 100).toFixed(0) }} %)</p>
     <input
       @input="handleGain"
@@ -22,9 +27,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, watch, PropType } from "vue";
+import { defineComponent, watch, PropType, computed } from "vue";
 import useSynthKeyboard from "@/composables/useSynthKeyboard";
 import useSynthOscillator from "@/composables/useSynthOscillator";
+import { pitcher } from "@/lib/synth";
 
 export default defineComponent({
   props: {
@@ -40,7 +46,23 @@ export default defineComponent({
     // par défaut, utiliser la valeur passé en prop.
     // eslint-disable-next-line
     oscillator.state.waveForm = props.defaultWaveForm;
+
     const keyboard = useSynthKeyboard();
+
+    const computedFrequency = computed(() => {
+      let frequency = keyboard.state.frequency;
+
+      if (frequency !== undefined) {
+        frequency = pitcher(frequency, oscillator.state.pitch);
+      }
+
+      return frequency;
+    });
+
+    // Mettre à jour la note jouée par l'oscillateur quand la fréquence calculée change
+    watch(computedFrequency, (frequency) => {
+      oscillator.state.frequency = frequency;
+    });
 
     // mettre à jour la forme d'onde de l'oscillateur
     // si la prop de forme d'onde change.
@@ -51,20 +73,15 @@ export default defineComponent({
       }
     );
 
-    // utiliser la fréquence envoyée par le clavier
-    // comme fréquence de l'oscillator
-    watch(
-      () => keyboard.state.frequency,
-      (frequency) => {
-        oscillator.state.frequency = frequency;
-      }
-    );
-
     function handleGain(event: any) {
       oscillator.state.gain = event.target.value / 100;
     }
 
-    return { oscillator, handleGain };
+    function handlePitch(event: any) {
+      oscillator.state.pitch = event.target.value;
+    }
+
+    return { oscillator, handleGain, handlePitch };
   },
 });
 </script>

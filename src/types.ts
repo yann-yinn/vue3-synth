@@ -8,7 +8,8 @@ export interface Piste {
 export interface UseOscillatorState {
   waveForm: OscillatorType;
   gain: number;
-  pitch: undefined | number;
+  // de -24 à +24
+  pitch: number;
   frequency: undefined | number;
 }
 
