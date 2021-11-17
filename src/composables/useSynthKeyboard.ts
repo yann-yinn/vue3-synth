@@ -1,40 +1,31 @@
 import { reactive, computed } from "vue";
 import { UseKeyboardAsPianoState, UseKeyboardAsPianoReturn } from "@/types";
 
-let useKeyboardAsPianoKeydownListenerAttached = false;
-let useKeyboardAsPianoKeyupListenerAttached = false;
-
 const state: UseKeyboardAsPianoState = reactive({
   frequency: undefined,
   startFromFrequency: 55,
   keyPressed: undefined,
 });
 
+const frequencies = computed(() => {
+  return _keyboardMap(state.startFromFrequency);
+});
+
+document.addEventListener("keydown", (e) => {
+  if (frequencies.value.get(e.key)) {
+    state.keyPressed = e.key;
+    state.frequency = frequencies.value.get(e.key);
+  }
+});
+
+document.addEventListener("keyup", (e) => {
+  if (frequencies.value.get(e.key)) {
+    state.frequency = undefined;
+    state.keyPressed = undefined;
+  }
+});
+
 export default function useSynthKeyboard(): UseKeyboardAsPianoReturn {
-  const frequencies = computed(() => {
-    return _keyboardMap(state.startFromFrequency);
-  });
-
-  if (useKeyboardAsPianoKeydownListenerAttached === false) {
-    document.addEventListener("keydown", (e) => {
-      useKeyboardAsPianoKeydownListenerAttached = true;
-      if (frequencies.value.get(e.key)) {
-        state.keyPressed = e.key;
-        state.frequency = frequencies.value.get(e.key);
-      }
-    });
-  }
-
-  if (useKeyboardAsPianoKeyupListenerAttached === false) {
-    document.addEventListener("keyup", (e) => {
-      useKeyboardAsPianoKeyupListenerAttached = true;
-      if (frequencies.value.get(e.key)) {
-        state.frequency = undefined;
-        state.keyPressed = undefined;
-      }
-    });
-  }
-
   return { state };
 }
 
