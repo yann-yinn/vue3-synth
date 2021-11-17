@@ -1,5 +1,4 @@
 <template>
-  <h2>Oscillateur</h2>
   <div>
     <p>Forme d'onde</p>
     <select v-model="oscillator.state.waveForm">

@@ -19,9 +19,15 @@
 
   <div style="display: flex; justify-content: center">
     <div style="margin-right: 20px">
-      <Oscillator defaultWaveForm="sine" />
+      <h2>Oscillateur A</h2>
+      <Oscillator defaultWaveForm="triangle" />
     </div>
     <div style="margin-right: 20px">
+      <h2>Oscillateur B</h2>
+      <Oscillator defaultWaveForm="triangle" />
+    </div>
+    <div style="margin-right: 20px">
+      <h2>Oscillateur C</h2>
       <Oscillator defaultWaveForm="triangle" />
     </div>
   </div>

@@ -1,4 +1,4 @@
-import { reactive, watch } from "vue";
+import { reactive, watch, computed } from "vue";
 import { UseOscillatorReturn, UseOscillatorState } from "@/types";
 import useSynthAudio from "./useSynthAudio";
 
