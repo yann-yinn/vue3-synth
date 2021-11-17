@@ -1,6 +1,7 @@
 import { reactive, watch, computed } from "vue";
 import { UseOscillatorReturn, UseOscillatorState } from "@/types";
 import useSynthAudio from "./useSynthAudio";
+import { pitcher } from "@/lib/synth";
 
 /**
  * useOscillator
@@ -44,32 +45,40 @@ export default function useOscillator(): UseOscillatorReturn {
     }
   );
 
-  watch(
-    () => state.frequency,
-    (value: undefined | number) => {
-      // Note: un oscillateur ne peut être démarré qu'une seule fois,
-      // on ne peut donc pas utiliser start() et stop() puis à nouveau start()
-      // pour déclencher / couper / redéclencher le son de l'oscillo.
-      //
-      // On ne peut également pas le démarrer sans interaction utilisateur
-      // car Chrome l'interdit (afin qu'un son ne soit pas lancé automatiquement et
-      // imposé à l'internaute sans qu'il sache d'où il provient)
-      //
-      // On démarre donc l'oscillateur ici, (lorsque l'utilisateur appuie sur une
-      // touche de son clavier); puis on joue juste la connexion / déconnexion
-      // à la sortie audio pour rendre audible / inaudible le son de l'oscillo.
-      if (oscillatorStarted === false) {
-        oscillatorNode.start();
-        oscillatorStarted = true;
-      }
-      if (value) {
-        oscillatorNode.frequency.value = value;
-        oscillatorNode.connect(gainNode);
-      } else {
-        oscillatorNode.disconnect(gainNode);
-      }
+  // la fréquence à jouer par l'oscillateur dépend:
+  // - de la note jouée par le clavier
+  // - du réglage du pitch (exprimé en demi-tons) pour cet oscillateur.
+  const computedFrequency = computed(() => {
+    let frequency = state.frequency;
+    if (frequency !== undefined) {
+      frequency = pitcher(frequency, state.pitch);
     }
-  );
+    return frequency;
+  });
+
+  watch(computedFrequency, (value: undefined | number) => {
+    // Note: un oscillateur ne peut être démarré qu'une seule fois,
+    // on ne peut donc pas utiliser start() et stop() puis à nouveau start()
+    // pour déclencher / couper / redéclencher le son de l'oscillo.
+    //
+    // On ne peut également pas le démarrer sans interaction utilisateur
+    // car Chrome l'interdit (afin qu'un son ne soit pas lancé automatiquement et
+    // imposé à l'internaute sans qu'il sache d'où il provient)
+    //
+    // On démarre donc l'oscillateur ici, (lorsque l'utilisateur appuie sur une
+    // touche de son clavier); puis on joue juste la connexion / déconnexion
+    // à la sortie audio pour rendre audible / inaudible le son de l'oscillo.
+    if (oscillatorStarted === false) {
+      oscillatorNode.start();
+      oscillatorStarted = true;
+    }
+    if (value) {
+      oscillatorNode.frequency.value = value;
+      oscillatorNode.connect(gainNode);
+    } else {
+      oscillatorNode.disconnect(gainNode);
+    }
+  });
 
   return {
     oscillatorNode,
