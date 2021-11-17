@@ -27,7 +27,7 @@
   </div>
 
   <h2 style="padding-top: 50px">Debug</h2>
-  <div>Keyboard state: {{ keyboardAsPiano.state }}</div>
+  <div>Keyboard state: {{ keyboard.state }}</div>
   <div>synthAudio state: {{ synthAudio.state }}</div>
 </template>
 
@@ -42,24 +42,23 @@ export default defineComponent({
     Oscillator,
   },
   setup() {
-    const keyboardAsPiano = useSynthKeyboard();
+    const keyboard = useSynthKeyboard();
     const synthAudio = useSynthAudio();
 
     // mettre à jour le pitch du piano, c'est à dire à partir
     // de quelle note de départ la gamme de notes est crée.
     function handlePitch(event: any) {
-      keyboardAsPiano.state.startFromFrequency = event.target.value;
+      keyboard.state.startFromFrequency = event.target.value;
     }
 
     function handleVolume(event: any) {
-      console.log(" event.target.value ", event.target.value);
       synthAudio.state.gain = event.target.value / 100;
     }
 
     return {
       handlePitch,
       handleVolume,
-      keyboardAsPiano,
+      keyboard,
       synthAudio,
     };
   },

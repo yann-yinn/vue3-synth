@@ -10,23 +10,21 @@ const state = reactive({
   gain: 1,
 });
 
+watch(
+  () => state.gain,
+  (value: number) => {
+    if (value < 0 || value > 1) {
+      globalGainNode.gain.value = 0;
+      throw new Error("useOscillator: Le gain doit être compris entre 0 et 1");
+    }
+    globalGainNode.gain.value = value;
+  }
+);
+
 export default function useSynthAudio(): {
   audioContext: AudioContext;
   globalGainNode: GainNode;
   state: UseSynthAudioState;
 } {
-  watch(
-    () => state.gain,
-    (value: number) => {
-      if (value < 0 || value > 1) {
-        globalGainNode.gain.value = 0;
-        throw new Error(
-          "useOscillator: Le gain doit être compris entre 0 et 1"
-        );
-      }
-      globalGainNode.gain.value = value;
-    }
-  );
-
   return { audioContext, globalGainNode, state };
 }
