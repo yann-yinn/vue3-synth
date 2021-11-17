@@ -20,6 +20,7 @@ export default function useOscillator(): UseOscillatorReturn {
   // le gain de l'oscillateur au gain global du synthé, qui
   // est lui même connecté à la sortie audio de l'ordinateur.
   const oscillatorNode = audioContext.createOscillator();
+
   const gainNode = audioContext.createGain();
   gainNode.connect(globalGainNode);
 

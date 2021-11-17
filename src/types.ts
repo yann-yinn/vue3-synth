@@ -31,4 +31,5 @@ export interface UseKeyboardAsPianoReturn {
 
 export interface UseSynthAudioState {
   gain: number;
+  filterFrequency: number;
 }

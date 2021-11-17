@@ -10,7 +10,7 @@
     <input type="range" min="-24" max="24" v-model="oscillator.state.pitch" />
   </div>
 
-  <div class="mt-3">
+  <div class="mt-2">
     <p>Volume ({{ (oscillator.state.gain * 100).toFixed(0) }} %)</p>
     <input
       style="color: red"
@@ -48,8 +48,8 @@ export default defineComponent({
     // Mettre à jour la note jouée par l'oscillateur quand la fréquence calculée change
     watch(
       () => keyboard.state.frequency,
-      (frequency) => {
-        oscillator.state.frequency = frequency;
+      (value) => {
+        oscillator.state.frequency = value;
       }
     );
 

@@ -4,7 +4,7 @@
     <div
       class="flex flex-col md:flex-row justify-between bg-white shadow-lg p-10"
     >
-      <div class="">
+      <div>
         <h2>Oscillateur A</h2>
         <Oscillator defaultWaveForm="triangle" />
       </div>
@@ -18,22 +18,35 @@
       </div>
     </div>
 
-    <div class="p-10 mt-4 bg-white shadow-lg">
+    <div class="p-10 mt-4 bg-white shadow-lg flex justify-between">
       <div>
-        <p>Global pitch</p>
-        <input @input="handlePitch" type="range" min="55" max="220" />
+        <div>
+          <p>Global pitch</p>
+          <input @input="handlePitch" type="range" min="55" max="220" />
+        </div>
+        <div>
+          <p>Global volume</p>
+          <input
+            @input="handleVolume"
+            type="range"
+            min="0"
+            max="100"
+            :value="synthAudio.state.gain * 100"
+          />
+        </div>
       </div>
       <div>
-        <p>Global volume</p>
+        <p>Low pass (cutoff: {{ synthAudio.state.filterFrequency }} Hz)</p>
         <input
-          @input="handleVolume"
+          v-model="synthAudio.state.filterFrequency"
           type="range"
-          min="0"
-          max="100"
-          :value="synthAudio.state.gain * 100"
+          min="20"
+          max="2000"
         />
       </div>
     </div>
+
+    <div id="oscilloscope" />
 
     <h2 style="padding-top: 50px">Debug</h2>
     <pre class="bg-gray-900 text-white p-5 rounded">
