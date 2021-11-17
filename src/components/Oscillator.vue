@@ -1,21 +1,19 @@
 <template>
-  <div>
-    <p>Forme d'onde</p>
-    <select v-model="oscillator.state.waveForm">
-      <option value="sine">Sine</option>
-      <option value="square">Square</option>
-      <option value="triangle">Triangle</option>
-    </select>
-  </div>
+  <select v-model="oscillator.state.waveForm" class="rounded w-full">
+    <option value="sine">Sine</option>
+    <option value="square">Square</option>
+    <option value="triangle">Triangle</option>
+  </select>
 
-  <div>
+  <div class="mt-3">
     <p>Pitch {{ oscillator.state.pitch }}</p>
     <input type="range" min="-24" max="24" v-model="oscillator.state.pitch" />
   </div>
 
-  <div>
+  <div class="mt-3">
     <p>Volume ({{ (oscillator.state.gain * 100).toFixed(0) }} %)</p>
     <input
+      style="color: red"
       @input="handleGain"
       type="range"
       min="0"

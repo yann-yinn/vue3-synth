@@ -1,40 +1,46 @@
 <template>
-  <h2>Presser une lettre du clavier pour jouer</h2>
-  <div style="display: flex; justify-content: center">
-    <div>
-      <p>Global pitch</p>
-      <input @input="handlePitch" type="range" min="55" max="220" />
+  <div class="max-w-2xl mx-auto p-10">
+    <h2 class="text-center">Presser une lettre du clavier pour jouer</h2>
+    <div
+      class="flex flex-col md:flex-row justify-between bg-white shadow-lg p-10"
+    >
+      <div class="">
+        <h2>Oscillateur A</h2>
+        <Oscillator defaultWaveForm="triangle" />
+      </div>
+      <div class="">
+        <h2>Oscillateur B</h2>
+        <Oscillator defaultWaveForm="triangle" />
+      </div>
+      <div class="">
+        <h2>Oscillateur C</h2>
+        <Oscillator defaultWaveForm="triangle" />
+      </div>
     </div>
-    <div>
-      <p>Global volume</p>
-      <input
-        @input="handleVolume"
-        type="range"
-        min="0"
-        max="100"
-        :value="synthAudio.state.gain * 100"
-      />
-    </div>
-  </div>
 
-  <div style="display: flex; justify-content: center">
-    <div style="margin-right: 20px">
-      <h2>Oscillateur A</h2>
-      <Oscillator defaultWaveForm="triangle" />
+    <div class="p-10 mt-4 bg-white shadow-lg">
+      <div>
+        <p>Global pitch</p>
+        <input @input="handlePitch" type="range" min="55" max="220" />
+      </div>
+      <div>
+        <p>Global volume</p>
+        <input
+          @input="handleVolume"
+          type="range"
+          min="0"
+          max="100"
+          :value="synthAudio.state.gain * 100"
+        />
+      </div>
     </div>
-    <div style="margin-right: 20px">
-      <h2>Oscillateur B</h2>
-      <Oscillator defaultWaveForm="triangle" />
-    </div>
-    <div style="margin-right: 20px">
-      <h2>Oscillateur C</h2>
-      <Oscillator defaultWaveForm="triangle" />
-    </div>
-  </div>
 
-  <h2 style="padding-top: 50px">Debug</h2>
-  <div>Keyboard state: {{ keyboard.state }}</div>
-  <div>synthAudio state: {{ synthAudio.state }}</div>
+    <h2 style="padding-top: 50px">Debug</h2>
+    <pre class="bg-gray-900 text-white p-5 rounded">
+      <div>Keyboard state: {{ keyboard.state }}</div>
+      <div>synthAudio state: {{ synthAudio.state }}</div>
+    </pre>
+  </div>
 </template>
 
 <script lang="ts">
