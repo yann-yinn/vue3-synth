@@ -12,7 +12,7 @@
         type="range"
         min="0"
         max="100"
-        :value="audioContext.state.gain * 100"
+        :value="synthAudio.state.gain * 100"
       />
     </div>
   </div>
@@ -28,6 +28,7 @@
 
   <h2 style="padding-top: 50px">Debug</h2>
   <div>Keyboard state: {{ keyboardAsPiano.state }}</div>
+  <div>synthAudio state: {{ synthAudio.state }}</div>
 </template>
 
 <script lang="ts">
@@ -41,7 +42,7 @@ export default defineComponent({
   },
   setup() {
     const keyboardAsPiano = useKeyboardAsPiano();
-    const audioContext = useSynthAudio();
+    const synthAudio = useSynthAudio();
 
     // mettre à jour le pitch du piano, c'est à dire à partir
     // de quelle note de départ la gamme de notes est crée.
@@ -51,14 +52,14 @@ export default defineComponent({
 
     function handleVolume(event: any) {
       console.log(" event.target.value ", event.target.value);
-      audioContext.state.gain = event.target.value / 100;
+      synthAudio.state.gain = event.target.value / 100;
     }
 
     return {
       handlePitch,
       handleVolume,
       keyboardAsPiano,
-      audioContext,
+      synthAudio,
     };
   },
 });

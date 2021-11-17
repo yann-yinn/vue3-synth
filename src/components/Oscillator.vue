@@ -19,7 +19,6 @@
       :value="oscillator.state.gain * 100"
     />
   </div>
-  -
 </template>
 
 <script lang="ts">
